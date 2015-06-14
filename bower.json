@@ -1,0 +1,42 @@
+{
+  "name": "infinite-scroll",
+  "version": "0.1.0",
+  "description": "Infinite scroll",
+  "homepage": "https://github.com/r-park/infinite-scroll",
+  "repository": "https://github.com/r-park/infinite-scroll.git",
+  "author": "Richard Park",
+  "license": "MIT",
+
+  "private": true,
+
+  "ignore": [
+    "node_modules",
+    "src",
+    "test",
+    "tmp",
+    "**/.*",
+    "gulpfile.js",
+    "karma.conf.js",
+    "package.json"
+  ],
+
+  "keywords": [
+    "endless",
+    "endless-scroll",
+    "infinite",
+    "infinite-scroll",
+    "infinitescroll",
+    "infinity",
+    "load",
+    "loader",
+    "scroll",
+    "scrolling",
+    "tumblr"
+  ],
+
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ]
+}
