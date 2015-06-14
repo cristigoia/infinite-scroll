@@ -32,7 +32,8 @@ module.exports = function(config) {
       'src/watcher.js',
       'src/infinite-scroll.js',
       'test/*.spec.js',
-      'test/fixtures/*.html'
+      'test/fixtures/page-1.html',
+      {pattern: 'test/fixtures/page-{2,3}.html', watched: false, included: false, served: true}
     ],
 
 
@@ -43,7 +44,7 @@ module.exports = function(config) {
     // preprocess matching files before serving them to the browser
     // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
     preprocessors: {
-      'test/fixtures/*.html': ['html2js']
+      'test/fixtures/page-1.html': ['html2js']
     },
 
 
