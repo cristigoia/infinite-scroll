@@ -1,5 +1,6 @@
 var browserSync = require('browser-sync'),
     bump        = require('gulp-bump'),
+    concat      = require('gulp-concat'),
     coveralls   = require('gulp-coveralls'),
     del         = require('del'),
     eslint      = require('gulp-eslint'),
@@ -105,13 +106,14 @@ gulp.task('uglify', function(){
 gulp.task('umd', function(){
   var umdHelper = function(){ return 'InfiniteScroll'; };
 
-  return gulp.src('./src/infinite-scroll.js')
+  return gulp.src('./src/*.js')
+    .pipe(concat('infinite-scroll.js'))
     .pipe(umd({exports: umdHelper, namespace: umdHelper}))
     .pipe(gulp.dest('./dist'));
 });
 
 
-gulp.task('build', gulp.series('lint', 'test', 'clean:dist', 'umd', 'uglify', 'headers'));
+gulp.task('build', gulp.series('test', 'clean:dist', 'umd', 'uglify', 'headers'));
 
 
 gulp.task('default', gulp.series('sass', function watch(){
