@@ -18,6 +18,7 @@ function InfiniteScroll(config) {
   this.itemSelector = config.itemSelector;
   this.urlSelector = config.urlSelector;
 
+  this.autoLoad = true;
   this.waitForImages = !!config.waitForImages;
 
   if (config.injector) {
@@ -33,7 +34,11 @@ function InfiniteScroll(config) {
   };
 
   this.watcher = new Watcher({
-    callback: this.load.bind(this)
+    callback: function(){
+      if (this.autoload) {
+        this.load();
+      }
+    }.bind(this)
   });
 }
 

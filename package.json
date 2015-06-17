@@ -17,7 +17,7 @@
   "devDependencies": {
     "browser-sync": "^2.7.10",
     "del": "^1.2.0",
-    "event-emitter": "git://github.com/r-park/event-emitter.git",
+    "event-emitter": "r-park/event-emitter.git",
     "gulp": "gulpjs/gulp.git#4.0",
     "gulp-bump": "^0.3.1",
     "gulp-concat": "^2.5.2",
@@ -41,7 +41,7 @@
     "karma-ie-launcher": "^0.2.0",
     "karma-jasmine": "^0.3.5",
     "karma-safari-launcher": "^0.1.1",
-    "sass-lib": "git://github.com/r-park/sass-lib.git",
+    "sass-lib": "r-park/sass-lib.git",
     "sinon": "^1.15.3"
   },
 
