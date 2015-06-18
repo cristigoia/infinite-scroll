@@ -29,8 +29,7 @@ module.exports = function(config) {
       'node_modules/jquery/dist/jquery.min.js',
       'node_modules/sinon/pkg/sinon.js',
       'node_modules/imagesready/src/imagesready.js',
-      'src/watcher.js',
-      'src/infinite-scroll.js',
+      'target/infinite-scroll.js',
       'test/*.spec.js',
       'test/fixtures/page-1.html',
       {pattern: 'test/fixtures/page-{2,3}.html', watched: false, included: false, served: true}

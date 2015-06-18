@@ -11,8 +11,8 @@ describe("InfiniteScroll", function(){
 
     config = {
       container: '.posts',
-      itemSelector: '.post',
-      urlSelector: '.pagination__next'
+      item: '.post',
+      pagination: '.pagination__next'
     };
   });
 
@@ -32,17 +32,17 @@ describe("InfiniteScroll", function(){
       expect(infiniteScroll.container[0]).toBe(container);
     });
 
-    it("should set `itemSelector` to be `config.itemSelector`", function(){
+    it("should set `item` to be `options.item`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.itemSelector).toBe(config.itemSelector);
+      expect(infiniteScroll.item).toBe(config.item);
     });
 
-    it("should set `urlSelector` to be `config.urlSelector`", function(){
+    it("should set `pagination` to be `options.pagination`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.urlSelector).toBe(config.urlSelector);
+      expect(infiniteScroll.pagination).toBe(config.pagination);
     });
 
-    it("should set `waitForImages` to be `config.waitForImages`", function(){
+    it("should set `waitForImages` to be `options.waitForImages`", function(){
       config.waitForImages = false;
       var infiniteScroll = new InfiniteScroll(config);
       expect(infiniteScroll.waitForImages).toBe(false);
@@ -57,21 +57,21 @@ describe("InfiniteScroll", function(){
       expect(infiniteScroll.waitForImages).toBe(false);
     });
 
-    it("should set `inject` to be function `config.injector`", function(){
-      config.injector = function(){};
+    it("should set `inject` to be function `options.inject`", function(){
+      config.inject = function(){};
       var infiniteScroll = new InfiniteScroll(config);
 
-      expect(infiniteScroll.inject).toBe(config.injector);
+      expect(infiniteScroll.inject).toBe(config.inject);
     });
 
-    it("should set `pageLimitReached` to be `false`", function(){
+    it("should set `finished` to be `false`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.pageLimitReached).toBe(false);
+      expect(infiniteScroll.finished).toBe(false);
     });
 
     it("should set `requestConfig`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      var url = document.querySelector(config.urlSelector).getAttribute('href');
+      var url = document.querySelector(config.pagination).getAttribute('href');
 
       expect(infiniteScroll.requestConfig.context).toBe(infiniteScroll);
       expect(infiniteScroll.requestConfig.dataType).toBe('html');
@@ -137,9 +137,9 @@ describe("InfiniteScroll", function(){
       $.ajax.restore();
     });
 
-    it("should skip jQuery.ajax request when `pageLimitReached` is `true`", function(){
+    it("should skip jQuery.ajax request when `finished` is `true`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      infiniteScroll.pageLimitReached = true;
+      infiniteScroll.finished = true;
 
       sinon.spy($, 'ajax');
 
@@ -191,15 +191,15 @@ describe("InfiniteScroll", function(){
       );
     });
 
-    it("should set `pageLimitReached` to `true` if url selector yields 0 elements", function(done){
+    it("should set `finished` to `true` if url selector yields 0 elements", function(done){
       var infiniteScroll = new InfiniteScroll(config);
 
       infiniteScroll.requestConfig.url = '/base/test/fixtures/page-3.html';
-      infiniteScroll.pageLimitReached = false;
+      infiniteScroll.finished = false;
 
       infiniteScroll.load().then(
         function(){
-          expect(infiniteScroll.pageLimitReached).toBe(true);
+          expect(infiniteScroll.finished).toBe(true);
           done();
         },
         function(){

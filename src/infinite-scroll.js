@@ -5,70 +5,79 @@
  * @name InfiniteScroll
  * @constructor
  *
- * @param {{}} config
- * @param {Element|string} config.container
- * @param {Function}       [config.injector]
- * @param {string}         config.itemSelector
- * @param {string}         config.urlSelector
- * @param {boolean}        config.waitForImages
+ * @param {{}}                    options
+ * @param {boolean}               [options.autoLoad=true]
+ * @param {Element|jQuery|string} options.container
+ * @param {Function}              [options.inject]
+ * @param {string}                options.item
+ * @param {string}                options.pagination
+ * @param {number}                [options.scrollBuffer=150]
+ * @param {boolean}               [options.waitForImages=false]
  *
  */
-function InfiniteScroll(config) {
-  this.container = $(config.container);
-  this.itemSelector = config.itemSelector;
-  this.urlSelector = config.urlSelector;
+function InfiniteScroll(options) {
 
-  this.autoLoad = true;
-  this.waitForImages = !!config.waitForImages;
+  this.autoLoad = options.autoLoad !== false;
 
-  if (config.injector) {
-    this.inject = config.injector;
+  this.container = $(options.container);
+
+  this.finished = false;
+
+  if (options.inject) {
+    this.inject = options.inject;
   }
 
-  this.pageLimitReached = false;
+  this.item = options.item;
+
+  this.pagination = options.pagination;
 
   this.requestConfig = {
     context: this,
     dataType: 'html',
-    url: $(this.urlSelector).attr('href')
+    url: $(this.pagination).attr('href')
   };
 
+  this.waitForImages = !!options.waitForImages;
+
   this.watcher = new Watcher({
+    buffer: options.scrollBuffer,
     callback: function(){
-      if (this.autoload) {
-        this.load();
-      }
+      if (this.autoLoad) this.load();
     }.bind(this)
   });
+
 }
 
 
 InfiniteScroll.prototype = {
 
-  /**
-   * @param {String} data
-   */
-  handleResponse : function(data) {
+  inject : function(items) {
+    if (items) {
+      this.container.append(items);
+    }
+  },
+
+
+  load : function() {
+    if (this.finished) return;
+
+    return $.ajax(this.requestConfig)
+      .then(this.process);
+  },
+
+
+  process : function(data) {
     var $data = $('<div>' + data + '</div>');
+    var $items = $data.find(this.item);
 
-    var $pagination = $data.find(this.urlSelector);
-    if ($pagination.length) {
-      this.requestConfig.url = $pagination.attr('href');
-    }
-    else {
-      this.pageLimitReached = true;
-    }
-
-    var $items = $data.find(this.itemSelector);
-
-    var that = this;
+    this.updatePagination($data);
 
     if (this.waitForImages) {
       $items.imagesReady()
-        .then(function(items){
-          that.inject(items);
-          that.start();
-        });
+        .then(function(){
+          this.inject($items);
+          this.start();
+        }.bind(this));
     }
     else {
       this.inject($items);
@@ -77,40 +86,27 @@ InfiniteScroll.prototype = {
   },
 
 
-  /**
-   * @param {jQuery} items
-   */
-  inject : function(items) {
-    if (items) {
-      this.container.append(items);
-    }
-  },
-
-
-  /**
-   *
-   */
-  load : function() {
-    if (this.pageLimitReached) return;
-
-    return $.ajax(this.requestConfig)
-      .then(this.handleResponse);
-  },
-
-
-  /**
-   *
-   */
   start : function() {
+    if (this.finished) return;
     this.watcher.start();
   },
 
 
-  /**
-   *
-   */
   stop : function() {
     this.watcher.stop();
+  },
+
+
+  updatePagination : function(data) {
+    var $pagination = data.find(this.pagination);
+    if ($pagination.length) {
+      this.requestConfig.url = $pagination.attr('href');
+    }
+    else {
+      this.finished = true;
+    }
   }
 
 };
+
+
