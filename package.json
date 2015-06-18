@@ -11,8 +11,7 @@
 
   "scripts": {
     "coveralls": "gulp coveralls && rm -rf ./tmp",
-    "pretest": "gulp concat",
-    "test": "./node_modules/karma/bin/karma start --single-run --coverage"
+    "test": "gulp concat && ./node_modules/karma/bin/karma start --single-run --coverage"
   },
 
   "devDependencies": {
