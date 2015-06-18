@@ -10,8 +10,9 @@
   "private": true,
 
   "scripts": {
-    "test": "./node_modules/karma/bin/karma start --single-run --coverage",
-    "coveralls": "gulp coveralls && rm -rf ./tmp"
+    "coveralls": "gulp coveralls && rm -rf ./tmp",
+    "pretest": "gulp concat",
+    "test": "./node_modules/karma/bin/karma start --single-run --coverage"
   },
 
   "devDependencies": {
