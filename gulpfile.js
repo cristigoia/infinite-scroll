@@ -35,6 +35,18 @@ gulp.task('clean:dist', function(done){
 });
 
 
+gulp.task('clean:target', function(done){
+  del('./target/*', done);
+});
+
+
+gulp.task('concat', function concatenate(){
+  return gulp.src('./src/*.js')
+    .pipe(concat('infinite-scroll.js'))
+    .pipe(gulp.dest('./target'));
+});
+
+
 gulp.task('coveralls', function() {
   return gulp.src('./tmp/coverage/**/lcov.info')
     .pipe(coveralls());
@@ -77,7 +89,7 @@ gulp.task('sync', function(){
     .create()
     .init({
       browser: 'firefox',
-      files: ['src/**/*', 'examples/**/*.{css,html,js}'],
+      files: ['src/**/*', 'example/**/*.{css,html,js}'],
       port: 7000,
       server: {
         baseDir: '.'
@@ -116,8 +128,9 @@ gulp.task('umd', function(){
 gulp.task('build', gulp.series('test', 'clean:dist', 'umd', 'uglify', 'headers'));
 
 
-gulp.task('default', gulp.series('sass', function watch(){
+gulp.task('default', gulp.series('clean:target', 'concat', 'sass', function watch(){
   gulp.watch('./examples/**/*.scss', gulp.task('sass'));
+  gulp.watch('./src/**/*.js', gulp.task('concat'));
 }));
 
 
