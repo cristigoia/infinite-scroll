@@ -47,6 +47,17 @@ gulp.task('concat', function concatenate(){
 });
 
 
+gulp.task('copy', function(){
+  return gulp.src([
+    './node_modules/event-emitter/dist/event-emitter.min.js',
+    './node_modules/event-emitter/dist/event-emitter.min.js.map',
+    './node_modules/imagesready/dist/jquery-imagesready.min.js',
+    './node_modules/imagesready/dist/jquery-imagesready.min.js.map'
+  ])
+    .pipe(gulp.dest('./dist'));
+});
+
+
 gulp.task('coveralls', function() {
   return gulp.src('./tmp/coverage/**/lcov.info')
     .pipe(coveralls());
@@ -118,14 +129,14 @@ gulp.task('uglify', function(){
 gulp.task('umd', function(){
   var umdHelper = function(){ return 'InfiniteScroll'; };
 
-  return gulp.src(['./node_modules/event-emitter/src/event-emitter.js', './src/watcher.js', './src/infinite-scroll.js'])
+  return gulp.src(['./src/infinite-scroll.js', './src/watcher.js'])
     .pipe(concat('infinite-scroll.js'))
     .pipe(umd({exports: umdHelper, namespace: umdHelper}))
     .pipe(gulp.dest('./dist'));
 });
 
 
-gulp.task('build', gulp.series('test', 'clean:dist', 'umd', 'uglify', 'headers'));
+gulp.task('build', gulp.series('test', 'clean:dist', 'umd', 'uglify', 'headers', 'copy'));
 
 
 gulp.task('default', gulp.series('clean:target', 'concat', 'sass', function watch(){
