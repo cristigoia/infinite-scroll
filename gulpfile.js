@@ -118,7 +118,7 @@ gulp.task('uglify', function(){
 gulp.task('umd', function(){
   var umdHelper = function(){ return 'InfiniteScroll'; };
 
-  return gulp.src('./src/*.js')
+  return gulp.src(['./node_modules/event-emitter/src/event-emitter.js', './src/watcher.js', './src/infinite-scroll.js'])
     .pipe(concat('infinite-scroll.js'))
     .pipe(umd({exports: umdHelper, namespace: umdHelper}))
     .pipe(gulp.dest('./dist'));

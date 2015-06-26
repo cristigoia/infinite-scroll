@@ -82,6 +82,24 @@ describe("InfiniteScroll", function(){
       var infiniteScroll = new InfiniteScroll(config);
       expect(infiniteScroll.watcher instanceof Watcher).toBe(true);
     });
+
+    it("should extend self with event emitter functionality", function(){
+      var infiniteScroll = new InfiniteScroll(config);
+
+      [
+        'on',
+        'addListener',
+        'emit',
+        'removeListener',
+        'removeAllListeners',
+        'listeners',
+        'listenerCount',
+        '_getListeners'
+      ]
+        .forEach(function(method){
+          expect(infiniteScroll[method]).toBeDefined();
+        });
+    });
   });
 
 
@@ -130,7 +148,6 @@ describe("InfiniteScroll", function(){
       sinon.spy($, 'ajax');
 
       infiniteScroll.load();
-
 
       expect($.ajax.calledWith(infiniteScroll.requestConfig)).toBe(true);
 
@@ -222,6 +239,88 @@ describe("InfiniteScroll", function(){
           expect(infiniteScroll.inject.callCount).toBe(1);
           expect($('article').length).toBe(8);
           expect($('.post-page-2').length).toBe(4);
+          done();
+        },
+        function(){
+          expect(false).toBe(true);
+          done();
+        }
+      );
+    });
+  });
+
+
+  describe("Emitting events", function(){
+    it("should add listener to `loadStart` event", function(){
+      var infiniteScroll = new InfiniteScroll(config);
+      var listener = function(){};
+
+      infiniteScroll.on('load:start', listener);
+
+      expect(infiniteScroll.listenerCount('load:start')).toBe(1);
+    });
+
+    it("should add listener to `loadEnd` event", function(){
+      var infiniteScroll = new InfiniteScroll(config);
+      var listener = function(){};
+
+      infiniteScroll.on('load:end', listener);
+
+      expect(infiniteScroll.listenerCount('load:end')).toBe(1);
+    });
+
+    it("should add listener to `end` event", function(){
+      var infiniteScroll = new InfiniteScroll(config);
+      var listener = function(){};
+
+      infiniteScroll.on('end', listener);
+
+      expect(infiniteScroll.listenerCount('end')).toBe(1);
+    });
+
+    it("should emit when load cycle has started", function(){
+      var infiniteScroll = new InfiniteScroll(config);
+      var listenerStub = sinon.stub();
+
+      sinon.stub(infiniteScroll, 'process');
+
+      infiniteScroll.on('load:start', listenerStub);
+      infiniteScroll.load();
+
+      expect(listenerStub.calledOnce).toBe(true);
+    });
+
+    it("should emit when load cycle has ended", function(done){
+      var infiniteScroll = new InfiniteScroll(config);
+      var listenerStub = sinon.stub();
+
+      sinon.stub(infiniteScroll, 'start');
+
+      infiniteScroll.on('load:end', listenerStub);
+
+      infiniteScroll.load().then(
+        function(){
+          expect(listenerStub.calledOnce).toBe(true);
+          done();
+        },
+        function(){
+          console.log(arguments);
+          expect(false).toBe(true);
+          done();
+        }
+      );
+    });
+
+    it("should emit when all pages have been loaded", function(done){
+      var infiniteScroll = new InfiniteScroll(config);
+      var listenerStub = sinon.stub();
+
+      infiniteScroll.requestConfig.url = '/base/test/fixtures/page-3.html';
+      infiniteScroll.on('end', listenerStub);
+
+      infiniteScroll.load().then(
+        function(){
+          expect(listenerStub.calledOnce).toBe(true);
           done();
         },
         function(){

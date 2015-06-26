@@ -1,19 +1,16 @@
 {
   "name": "infinite-scroll",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Infinite scroll",
   "homepage": "https://github.com/r-park/infinite-scroll",
   "repository": "https://github.com/r-park/infinite-scroll.git",
   "author": "Richard Park",
   "license": "MIT",
-
   "private": true,
-
   "scripts": {
     "coveralls": "gulp coveralls && rm -rf ./tmp",
     "test": "./node_modules/karma/bin/karma start --single-run --coverage"
   },
-
   "devDependencies": {
     "browser-sync": "^2.7.12",
     "del": "^1.2.0",
@@ -32,8 +29,8 @@
     "imagesready": "^0.1.10",
     "jasmine-core": "^2.3.4",
     "jquery": "*",
-    "karma": "^0.12.36",
-    "karma-chrome-launcher": "^0.1.12",
+    "karma": "^0.12.37",
+    "karma-chrome-launcher": "^0.2.0",
     "karma-coverage": "^0.4.2",
     "karma-firefox-launcher": "^0.1.6",
     "karma-fixture": "^0.2.5",
@@ -41,10 +38,9 @@
     "karma-ie-launcher": "^0.2.0",
     "karma-jasmine": "^0.3.5",
     "karma-safari-launcher": "^0.1.1",
-    "sass-lib": "r-park/sass-lib.git",
+    "minx": "^0.4.10",
     "sinon": "^1.15.3"
   },
-
   "keywords": [
     "endless",
     "endless-scroll",

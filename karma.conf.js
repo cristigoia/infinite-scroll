@@ -28,6 +28,7 @@ module.exports = function(config) {
     files: [
       'node_modules/jquery/dist/jquery.min.js',
       'node_modules/sinon/pkg/sinon.js',
+      'node_modules/event-emitter/dist/event-emitter.js',
       'node_modules/imagesready/src/imagesready.js',
       'src/*.js',
       'test/*.spec.js',

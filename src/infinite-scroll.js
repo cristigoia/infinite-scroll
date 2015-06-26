@@ -17,6 +17,8 @@
  */
 function InfiniteScroll(options) {
 
+  eventEmitter(['load:start', 'load:end', 'end'], this);
+
   this.autoLoad = options.autoLoad !== false;
 
   this.container = $(options.container);
@@ -61,6 +63,8 @@ InfiniteScroll.prototype = {
   load : function() {
     if (this.finished) return;
 
+    this.emit('load:start');
+
     return $.ajax(this.requestConfig)
       .then(this.process);
   },
@@ -75,11 +79,13 @@ InfiniteScroll.prototype = {
     if (this.waitForImages) {
       $items.imagesReady()
         .then(function(){
+          this.emit('load:end');
           this.inject($items);
           this.start();
         }.bind(this));
     }
     else {
+      this.emit('load:end');
       this.inject($items);
       this.start();
     }
@@ -104,6 +110,7 @@ InfiniteScroll.prototype = {
     }
     else {
       this.finished = true;
+      this.emit('end');
     }
   }
 
