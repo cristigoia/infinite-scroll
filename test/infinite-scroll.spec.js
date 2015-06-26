@@ -23,23 +23,14 @@ describe("InfiniteScroll", function(){
 
 
   describe("Constructor", function(){
-    it("should set property `container` using css selector", function(){
-      var infiniteScroll = new InfiniteScroll(config);
-      var container = document.querySelector('.posts');
-
-      expect(infiniteScroll.container.jquery).toBeDefined();
-      expect(infiniteScroll.container.length).toBe(1);
-      expect(infiniteScroll.container[0]).toBe(container);
-    });
-
     it("should set `item` to be `options.item`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.item).toBe(config.item);
+      expect(infiniteScroll.itemSelector).toBe(config.item);
     });
 
     it("should set `pagination` to be `options.pagination`", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.pagination).toBe(config.pagination);
+      expect(infiniteScroll.paginationSelector).toBe(config.pagination);
     });
 
     it("should set `waitForImages` to be `options.waitForImages`", function(){
@@ -55,13 +46,6 @@ describe("InfiniteScroll", function(){
     it("should set `waitForImages` with default value of `false`", function(){
       var infiniteScroll = new InfiniteScroll(config);
       expect(infiniteScroll.waitForImages).toBe(false);
-    });
-
-    it("should set `inject` to be function `options.inject`", function(){
-      config.inject = function(){};
-      var infiniteScroll = new InfiniteScroll(config);
-
-      expect(infiniteScroll.inject).toBe(config.inject);
     });
 
     it("should set `finished` to be `false`", function(){
@@ -228,28 +212,6 @@ describe("InfiniteScroll", function(){
   });
 
 
-  describe("Injecting", function(){
-    it("should inject jQuery-wrapped items extracted from ajax response", function(done){
-      var infiniteScroll = new InfiniteScroll(config);
-
-      sinon.spy(infiniteScroll, 'inject');
-
-      infiniteScroll.load().then(
-        function(){
-          expect(infiniteScroll.inject.callCount).toBe(1);
-          expect($('article').length).toBe(8);
-          expect($('.post-page-2').length).toBe(4);
-          done();
-        },
-        function(){
-          expect(false).toBe(true);
-          done();
-        }
-      );
-    });
-  });
-
-
   describe("Emitting events", function(){
     it("should add listener to `loadStart` event", function(){
       var infiniteScroll = new InfiniteScroll(config);
@@ -269,20 +231,9 @@ describe("InfiniteScroll", function(){
       expect(infiniteScroll.listenerCount('load:end')).toBe(1);
     });
 
-    it("should add listener to `end` event", function(){
-      var infiniteScroll = new InfiniteScroll(config);
-      var listener = function(){};
-
-      infiniteScroll.on('end', listener);
-
-      expect(infiniteScroll.listenerCount('end')).toBe(1);
-    });
-
     it("should emit when load cycle has started", function(){
       var infiniteScroll = new InfiniteScroll(config);
       var listenerStub = sinon.stub();
-
-      sinon.stub(infiniteScroll, 'process');
 
       infiniteScroll.on('load:start', listenerStub);
       infiniteScroll.load();
@@ -305,25 +256,6 @@ describe("InfiniteScroll", function(){
         },
         function(){
           console.log(arguments);
-          expect(false).toBe(true);
-          done();
-        }
-      );
-    });
-
-    it("should emit when all pages have been loaded", function(done){
-      var infiniteScroll = new InfiniteScroll(config);
-      var listenerStub = sinon.stub();
-
-      infiniteScroll.requestConfig.url = '/base/test/fixtures/page-3.html';
-      infiniteScroll.on('end', listenerStub);
-
-      infiniteScroll.load().then(
-        function(){
-          expect(listenerStub.calledOnce).toBe(true);
-          done();
-        },
-        function(){
           expect(false).toBe(true);
           done();
         }
