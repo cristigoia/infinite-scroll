@@ -62,9 +62,9 @@ describe("InfiniteScroll", function(){
       expect(infiniteScroll.requestConfig.url).toBe(url);
     });
 
-    it("should set `watcher` with instance of Watcher", function(){
+    it("should set `listener` with instance of Listener", function(){
       var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.watcher instanceof Watcher).toBe(true);
+      expect(infiniteScroll.listener instanceof Listener).toBe(true);
     });
 
     it("should extend self with event emitter functionality", function(){
@@ -88,27 +88,27 @@ describe("InfiniteScroll", function(){
 
 
   describe("Starting", function(){
-    it("should start the watcher", function(){
+    it("should start the listener", function(){
       var infiniteScroll = new InfiniteScroll(config);
 
-      sinon.stub(infiniteScroll.watcher, 'start');
+      sinon.stub(infiniteScroll.listener, 'start');
 
       infiniteScroll.start();
 
-      expect(infiniteScroll.watcher.start.callCount).toBe(1);
+      expect(infiniteScroll.listener.start.callCount).toBe(1);
     });
   });
 
 
   describe("Stopping", function(){
-    it("should stop the watcher", function(){
+    it("should stop the listener", function(){
       var infiniteScroll = new InfiniteScroll(config);
 
-      sinon.stub(infiniteScroll.watcher, 'stop');
+      sinon.stub(infiniteScroll.listener, 'stop');
 
       infiniteScroll.stop();
 
-      expect(infiniteScroll.watcher.stop.callCount).toBe(1);
+      expect(infiniteScroll.listener.stop.callCount).toBe(1);
     });
   });
 

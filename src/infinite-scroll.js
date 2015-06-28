@@ -36,8 +36,8 @@ function InfiniteScroll(options) {
   this.waitForImages = !!options.waitForImages;
 
   // TODO: need to emit when autoLoad is false
-  this.watcher = new Watcher({
-    buffer: options.scrollBuffer,
+  this.listener = new Listener({
+    activeZone: options.scrollBuffer,
     callback: function(){
       if (this.autoLoad) this.load();
     }.bind(this)
@@ -95,7 +95,7 @@ InfiniteScroll.prototype = {
    */
   start : function() {
     if (!this.finished) {
-      this.watcher.start();
+      this.listener.start();
     }
   },
 
@@ -104,7 +104,7 @@ InfiniteScroll.prototype = {
    *
    */
   stop : function() {
-    this.watcher.stop();
+    this.listener.stop();
   },
 
 
