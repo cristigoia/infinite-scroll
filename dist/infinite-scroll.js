@@ -1,4 +1,4 @@
-/* infinite-scroll v0.3.0 - 2015-06-26T06:35:50.973Z - https://github.com/r-park/infinite-scroll */
+/* infinite-scroll v0.4.0 - 2015-06-28T01:32:04.520Z - https://github.com/r-park/infinite-scroll */
 ;(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([], factory);
@@ -18,48 +18,50 @@
  * @param {{}}      options
  * @param {boolean} [options.autoLoad=true]
  * @param {string}  options.item
- * @param {string}  options.pagination
- * @param {number}  [options.scrollBuffer=150]
+ * @param {string}  options.next
+ * @param {number}  [options.activeZone=200]
  * @param {boolean} [options.waitForImages=false]
  *
  */
 function InfiniteScroll(options) {
-
-  eventEmitter(['load:start', 'load:end'], this);
+  eventEmitter(['load:ready', 'load:start', 'load:end'], this);
 
   this.autoLoad = options.autoLoad !== false;
 
-  this.currentPage = 1;
+  this.currentPage = 0;
 
   this.finished = false;
 
   this.itemSelector = options.item;
-
-  this.paginationSelector = options.pagination;
+  this.nextSelector = options.next;
 
   this.requestConfig = {
     context: this,
-    dataType: 'html',
-    url: $(this.paginationSelector).attr('href')
+    dataType: 'html'
   };
+
+  this.updatePagination($(this.nextSelector));
 
   this.waitForImages = !!options.waitForImages;
 
-  // TODO: need to emit when autoLoad is false
-  this.watcher = new Watcher({
-    buffer: options.scrollBuffer,
+  this.listener = new Listener({
+    activeZone: options.activeZone || 200,
     callback: function(){
-      if (this.autoLoad) this.load();
+      if (this.autoLoad) {
+        this.load();
+      }
+      else {
+        this.emit('load:ready');
+      }
     }.bind(this)
   });
-
 }
 
 
 InfiniteScroll.prototype = {
 
   /**
-   * @returns {Promise}
+   * Load the next available page.
    */
   load : function() {
     if (this.finished) return;
@@ -70,7 +72,7 @@ InfiniteScroll.prototype = {
       .then(function(data){
         var $data = $('<div>' + data + '</div>'),
             $items = $data.find(this.itemSelector),
-            $pagination = $data.find(this.paginationSelector);
+            $pagination = $data.find(this.nextSelector);
 
         $data = null;
 
@@ -101,20 +103,20 @@ InfiniteScroll.prototype = {
 
 
   /**
-   *
+   * Start infinite-scroll.
    */
   start : function() {
     if (!this.finished) {
-      this.watcher.start();
+      this.listener.start();
     }
   },
 
 
   /**
-   *
+   * Stop infinite-scroll.
    */
   stop : function() {
-    this.watcher.stop();
+    this.listener.stop();
   },
 
 
@@ -130,65 +132,6 @@ InfiniteScroll.prototype = {
     else {
       this.finished = true;
     }
-  }
-
-};
-
-/**
- * @name Watcher
- * @constructor
- *
- * @param {{}}       options
- * @param {number}   [options.buffer=150]
- * @param {Function} options.callback
- *
- */
-function Watcher(options) {
-  this.buffer = options.buffer || 150;
-  this.callback = options.callback;
-  this.watching = false;
-
-  this.listener = function(){
-    if (this.validate()) {
-      this.stop();
-      this.callback();
-    }
-  }.bind(this);
-}
-
-
-Watcher.prototype = {
-
-  /**
-   *
-   */
-  start : function() {
-    if (this.watching) return;
-
-    if (this.validate()) {
-      this.callback();
-    }
-    else {
-      this.watching = true;
-      window.addEventListener('scroll', this.listener);
-    }
-  },
-
-
-  /**
-   *
-   */
-  stop : function() {
-    window.removeEventListener('scroll', this.listener);
-    this.watching = false;
-  },
-
-
-  /**
-   * @returns {boolean}
-   */
-  validate : function() {
-    return window.innerHeight + window.pageYOffset >= document.body.scrollHeight - this.buffer;
   }
 
 };
