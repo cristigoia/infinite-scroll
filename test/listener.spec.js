@@ -19,7 +19,7 @@ describe("Listener", function(){
       expect(listener.activeZone).toBe(300);
     });
 
-    it("should set property `buffer` to default value", function(){
+    it("should set property `activeZone` to default value", function(){
       expect(listener.activeZone).toBe(200);
     });
 
@@ -43,7 +43,7 @@ describe("Listener", function(){
 
   describe("Starting watch", function(){
     it("should pre-validate", function(){
-      sinon.spy(listener, 'validate');
+      sinon.stub(listener, 'validate');
 
       listener.start();
 
@@ -66,7 +66,7 @@ describe("Listener", function(){
       expect(listener.listening).toBe(true);
     });
 
-    it("should bind `listener` to `scroll` event if pre-validation fails", function(){
+    it("should bind listener to scroll event if pre-validation fails", function(){
       sinon.spy(window, 'addEventListener');
       sinon.stub(listener, 'validate').returns(false);
 
@@ -93,14 +93,26 @@ describe("Listener", function(){
   });
 
 
-  describe("Stopping watch", function(){
-    it("should unbind `listener` from `scroll` event", function(){
+  describe("Stopping listener", function(){
+    it("should unbind listener from scroll event when `listening` is `true`", function(){
       sinon.spy(window, 'removeEventListener');
 
+      listener.listening = true;
       listener.stop();
 
       expect(window.removeEventListener.callCount).toBe(1);
       expect(window.removeEventListener.calledWith('scroll', listener.onScroll)).toBe(true);
+
+      window.removeEventListener.restore();
+    });
+
+    it("should skip unbinding listener from scroll event when `listening` is `false`", function(){
+      sinon.spy(window, 'removeEventListener');
+
+      listener.listening = false;
+      listener.stop();
+
+      expect(window.removeEventListener.callCount).toBe(0);
 
       window.removeEventListener.restore();
     });
@@ -135,10 +147,11 @@ describe("Listener", function(){
 
 
     describe("with valid result", function(){
-      it("should unbind listener from scroll event", function(){
+      it("should unbind listener from scroll event when `listening` is `true`", function(){
         sinon.spy(window, 'removeEventListener');
         sinon.stub(listener, 'validate').returns(true);
 
+        listener.listening = true; // setting to `true` for test
         listener.resolve();
 
         expect(window.removeEventListener.callCount).toBe(1);

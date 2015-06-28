@@ -62,6 +62,7 @@ Listener.prototype = {
    * Stop listening to scroll event.
    */
   stop : function() {
+    if (!this.listening) return;
     window.removeEventListener('scroll', this.onScroll);
     this.listening = false;
   },
