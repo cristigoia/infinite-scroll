@@ -9,10 +9,10 @@ describe("InfiniteScroll", function(){
   beforeEach(function(){
     fixture.load('page-1.html');
 
-    config = {
+    options = {
       container: '.posts',
       item: '.post',
-      pagination: '.pagination__next'
+      next: '.pagination__next'
     };
   });
 
@@ -24,38 +24,44 @@ describe("InfiniteScroll", function(){
 
   describe("Constructor", function(){
     it("should set `item` to be `options.item`", function(){
-      var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.itemSelector).toBe(config.item);
+      var infiniteScroll = new InfiniteScroll(options);
+      expect(infiniteScroll.itemSelector).toBe(options.item);
     });
 
-    it("should set `pagination` to be `options.pagination`", function(){
-      var infiniteScroll = new InfiniteScroll(config);
-      expect(infiniteScroll.paginationSelector).toBe(config.pagination);
+    it("should set `nextSelector` to be `options.next`", function(){
+      var infiniteScroll = new InfiniteScroll(options);
+      expect(infiniteScroll.nextSelector).toBe(options.next);
     });
 
     it("should set `waitForImages` to be `options.waitForImages`", function(){
-      config.waitForImages = false;
-      var infiniteScroll = new InfiniteScroll(config);
+      options.waitForImages = false;
+      var infiniteScroll = new InfiniteScroll(options);
       expect(infiniteScroll.waitForImages).toBe(false);
 
-      config.waitForImages = true;
-      infiniteScroll = new InfiniteScroll(config);
+      options.waitForImages = true;
+      infiniteScroll = new InfiniteScroll(options);
       expect(infiniteScroll.waitForImages).toBe(true);
     });
 
     it("should set `waitForImages` with default value of `false`", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
       expect(infiniteScroll.waitForImages).toBe(false);
     });
 
-    it("should set `finished` to be `false`", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+    it("should set `finished` to `false` if next url is available", function(){
+      var infiniteScroll = new InfiniteScroll(options);
       expect(infiniteScroll.finished).toBe(false);
     });
 
+    it("should set `finished` to `true` if next url is not available", function(){
+      options.next = '.no-pagination-element';
+      var infiniteScroll = new InfiniteScroll(options);
+      expect(infiniteScroll.finished).toBe(true);
+    });
+
     it("should set `requestConfig`", function(){
-      var infiniteScroll = new InfiniteScroll(config);
-      var url = document.querySelector(config.pagination).getAttribute('href');
+      var infiniteScroll = new InfiniteScroll(options);
+      var url = document.querySelector(options.next).getAttribute('href');
 
       expect(infiniteScroll.requestConfig.context).toBe(infiniteScroll);
       expect(infiniteScroll.requestConfig.dataType).toBe('html');
@@ -63,12 +69,12 @@ describe("InfiniteScroll", function(){
     });
 
     it("should set `listener` with instance of Listener", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
       expect(infiniteScroll.listener instanceof Listener).toBe(true);
     });
 
     it("should extend self with event emitter functionality", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
 
       [
         'on',
@@ -89,7 +95,7 @@ describe("InfiniteScroll", function(){
 
   describe("Starting", function(){
     it("should start the listener", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
 
       sinon.stub(infiniteScroll.listener, 'start');
 
@@ -102,7 +108,7 @@ describe("InfiniteScroll", function(){
 
   describe("Stopping", function(){
     it("should stop the listener", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
 
       sinon.stub(infiniteScroll.listener, 'stop');
 
@@ -115,7 +121,7 @@ describe("InfiniteScroll", function(){
 
   describe("Loading", function(){
     it("should call jQuery.ajax", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
 
       sinon.spy($, 'ajax');
 
@@ -127,7 +133,7 @@ describe("InfiniteScroll", function(){
     });
 
     it("should pass `requestConfig` to jQuery.ajax", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
 
       sinon.spy($, 'ajax');
 
@@ -139,7 +145,7 @@ describe("InfiniteScroll", function(){
     });
 
     it("should skip jQuery.ajax request when `finished` is `true`", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
       infiniteScroll.finished = true;
 
       sinon.spy($, 'ajax');
@@ -155,8 +161,8 @@ describe("InfiniteScroll", function(){
 
   describe("Waiting for images", function(){
     it("should delegate to imagesReady if `waitForImages` is `true`", function(done){
-      config.waitForImages = true;
-      var infiniteScroll = new InfiniteScroll(config);
+      options.waitForImages = true;
+      var infiniteScroll = new InfiniteScroll(options);
 
       sinon.spy($.fn, 'imagesReady');
 
@@ -176,7 +182,7 @@ describe("InfiniteScroll", function(){
 
   describe("Extracting pagination URL", function(){
     it("should set `requestConfig.url` with the url of the next page", function(done){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
 
       infiniteScroll.requestConfig.url = '/base/test/fixtures/page-2.html';
 
@@ -192,8 +198,8 @@ describe("InfiniteScroll", function(){
       );
     });
 
-    it("should set `finished` to `true` if url selector yields 0 elements", function(done){
-      var infiniteScroll = new InfiniteScroll(config);
+    it("should set `finished` to `true` if next url selector yields 0 elements", function(done){
+      var infiniteScroll = new InfiniteScroll(options);
 
       infiniteScroll.requestConfig.url = '/base/test/fixtures/page-3.html';
       infiniteScroll.finished = false;
@@ -213,8 +219,17 @@ describe("InfiniteScroll", function(){
 
 
   describe("Emitting events", function(){
-    it("should add listener to `loadStart` event", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+    it("should add listener to `load:ready` event", function(){
+      var infiniteScroll = new InfiniteScroll(options);
+      var listener = function(){};
+
+      infiniteScroll.on('load:ready', listener);
+
+      expect(infiniteScroll.listenerCount('load:ready')).toBe(1);
+    });
+
+    it("should add listener to `load:start` event", function(){
+      var infiniteScroll = new InfiniteScroll(options);
       var listener = function(){};
 
       infiniteScroll.on('load:start', listener);
@@ -222,8 +237,8 @@ describe("InfiniteScroll", function(){
       expect(infiniteScroll.listenerCount('load:start')).toBe(1);
     });
 
-    it("should add listener to `loadEnd` event", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+    it("should add listener to `load:end` event", function(){
+      var infiniteScroll = new InfiniteScroll(options);
       var listener = function(){};
 
       infiniteScroll.on('load:end', listener);
@@ -231,8 +246,21 @@ describe("InfiniteScroll", function(){
       expect(infiniteScroll.listenerCount('load:end')).toBe(1);
     });
 
+    it("should emit `load:ready` when `autoLoad` is false and scroll position is in active zone", function(){
+      options.autoLoad = false;
+      var infiniteScroll = new InfiniteScroll(options);
+      var listenerStub = sinon.stub();
+      var loadSpy = sinon.spy(infiniteScroll, 'load');
+
+      infiniteScroll.on('load:ready', listenerStub);
+      infiniteScroll.listener.callback();
+
+      expect(listenerStub.calledOnce).toBe(true);
+      expect(loadSpy.callCount).toBe(0);
+    });
+
     it("should emit when load cycle has started", function(){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
       var listenerStub = sinon.stub();
 
       infiniteScroll.on('load:start', listenerStub);
@@ -242,7 +270,7 @@ describe("InfiniteScroll", function(){
     });
 
     it("should emit when load cycle has ended", function(done){
-      var infiniteScroll = new InfiniteScroll(config);
+      var infiniteScroll = new InfiniteScroll(options);
       var listenerStub = sinon.stub();
 
       sinon.stub(infiniteScroll, 'start');

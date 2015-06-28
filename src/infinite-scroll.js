@@ -8,48 +8,50 @@
  * @param {{}}      options
  * @param {boolean} [options.autoLoad=true]
  * @param {string}  options.item
- * @param {string}  options.pagination
- * @param {number}  [options.scrollBuffer=150]
+ * @param {string}  options.next
+ * @param {number}  [options.activeZone=200]
  * @param {boolean} [options.waitForImages=false]
  *
  */
 function InfiniteScroll(options) {
-
-  eventEmitter(['load:start', 'load:end'], this);
+  eventEmitter(['load:ready', 'load:start', 'load:end'], this);
 
   this.autoLoad = options.autoLoad !== false;
 
-  this.currentPage = 1;
+  this.currentPage = 0;
 
   this.finished = false;
 
   this.itemSelector = options.item;
-
-  this.paginationSelector = options.pagination;
+  this.nextSelector = options.next;
 
   this.requestConfig = {
     context: this,
-    dataType: 'html',
-    url: $(this.paginationSelector).attr('href')
+    dataType: 'html'
   };
+
+  this.updatePagination($(this.nextSelector));
 
   this.waitForImages = !!options.waitForImages;
 
-  // TODO: need to emit when autoLoad is false
   this.listener = new Listener({
-    activeZone: options.scrollBuffer,
+    activeZone: options.activeZone || 200,
     callback: function(){
-      if (this.autoLoad) this.load();
+      if (this.autoLoad) {
+        this.load();
+      }
+      else {
+        this.emit('load:ready');
+      }
     }.bind(this)
   });
-
 }
 
 
 InfiniteScroll.prototype = {
 
   /**
-   * @returns {Promise}
+   * Load the next available page.
    */
   load : function() {
     if (this.finished) return;
@@ -60,7 +62,7 @@ InfiniteScroll.prototype = {
       .then(function(data){
         var $data = $('<div>' + data + '</div>'),
             $items = $data.find(this.itemSelector),
-            $pagination = $data.find(this.paginationSelector);
+            $pagination = $data.find(this.nextSelector);
 
         $data = null;
 
@@ -91,7 +93,7 @@ InfiniteScroll.prototype = {
 
 
   /**
-   *
+   * Start infinite-scroll.
    */
   start : function() {
     if (!this.finished) {
@@ -101,7 +103,7 @@ InfiniteScroll.prototype = {
 
 
   /**
-   *
+   * Stop infinite-scroll.
    */
   stop : function() {
     this.listener.stop();

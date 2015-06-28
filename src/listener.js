@@ -6,6 +6,8 @@
  * @param {number}   [options.activeZone=200]
  * @param {function} options.callback
  *
+ * TODO: extend Listener with eventEmitter
+ *
  */
 function Listener(options) {
 
