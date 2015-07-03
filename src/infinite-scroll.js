@@ -2,126 +2,155 @@
 
 
 /**
- * @name InfiniteScroll
- * @constructor
+ * @name infiniteScroll
  *
- * @param {{}}      options
- * @param {boolean} [options.autoLoad=true]
- * @param {string}  options.item
- * @param {string}  options.next
- * @param {number}  [options.activeZone=200]
- * @param {boolean} [options.waitForImages=false]
+ * @param {{}}      config
+ * @param {boolean} [config.autoLoad]
+ * @param {string}  config.itemSelector
+ * @param {string}  config.nextSelector
+ * @param {number}  config.threshold
+ * @param {boolean} [config.waitForImages]
+ *
+ * @returns {{
+ *   load: Function,
+ *   start: Function,
+ *   stop: Function
+ * }}
  *
  */
-function InfiniteScroll(options) {
-  eventEmitter(['load:ready', 'load:start', 'load:end'], this);
-
-  this.autoLoad = options.autoLoad !== false;
-
-  this.currentPage = 0;
-
-  this.finished = false;
-
-  this.itemSelector = options.item;
-  this.nextSelector = options.next;
-
-  this.requestConfig = {
-    context: this,
-    dataType: 'html'
-  };
-
-  this.updatePagination($(this.nextSelector));
-
-  this.waitForImages = !!options.waitForImages;
-
-  this.listener = new Listener({
-    activeZone: options.activeZone || 200,
-    callback: function(){
-      if (this.autoLoad) {
-        this.load();
-      }
-      else {
-        this.emit('load:ready');
-      }
-    }.bind(this)
-  });
-}
-
-
-InfiniteScroll.prototype = {
+function infiniteScroll(config) {
 
   /**
-   * Load the next available page.
+   * @type {number}
    */
-  load : function() {
-    if (this.finished) return;
-
-    this.emit('load:start');
-
-    return $.ajax(this.requestConfig)
-      .then(function(data){
-        var $data = $('<div>' + data + '</div>'),
-            $items = $data.find(this.itemSelector),
-            $pagination = $data.find(this.nextSelector);
-
-        $data = null;
-
-        this.updatePagination($pagination);
-
-        if (this.waitForImages) {
-          $items.imagesReady()
-            .then(this.postLoad.bind(this));
-        }
-        else {
-          this.postLoad($items);
-        }
-      });
-  },
+  var currentPage = 1;
 
 
   /**
-   * @param {jQuery} items
+   * @type {string|undefined}
    */
-  postLoad : function(items) {
-    var data = {items: items, page: this.currentPage},
-        that = this;
-
-    this.emit('load:end', data, function(){
-      that.start();
-    });
-  },
+  var nextUrl = $(config.nextSelector).attr('href');
 
 
   /**
-   * Start infinite-scroll.
+   * @type {boolean}
    */
-  start : function() {
-    if (!this.finished) {
-      this.listener.start();
-    }
-  },
+  var finished = !nextUrl;
 
 
   /**
-   * Stop infinite-scroll.
+   * @type {{load: function(url:string)}}
    */
-  stop : function() {
-    this.listener.stop();
-  },
+  var loader = loaderService(
+    parserService(config.itemSelector, config.nextSelector),
+    config.waitForImages
+  );
 
 
   /**
-   * @param {jQuery} pagination
+   * @type {{
+   *   onScroll: Function,
+   *   valid: Function,
+   *   stopWatching: Function,
+   *   watch: Function,
+   *   watching: Function
+   * }}
    */
-  updatePagination : function(pagination) {
-    this.currentPage++;
-
-    if (pagination.length) {
-      this.requestConfig.url = pagination.attr('href');
+  var position = positionService(config.threshold, function(){
+    if (config.autoLoad !== false) {
+      service.load();
     }
     else {
-      this.finished = true;
+      service.emit('load:ready');
     }
-  }
+  });
 
-};
+
+  /**
+   * @param {{items:jQuery, nextUrl:string}} data
+   */
+  var afterLoad = function(data) {
+    if (!data.nextUrl) {
+      finished = true;
+      service.emit('finished');
+    }
+    else {
+      currentPage++;
+      nextUrl = data.nextUrl;
+    }
+
+    service.emit('load:end', {items: data.items, page: currentPage}, function(){
+      service.start();
+    });
+  };
+
+
+
+  var service = {
+
+    /**
+     * @returns {boolean}
+     */
+    finished : function() {
+      return finished;
+    },
+
+
+    /**
+     * @returns {string|undefined}
+     */
+    nextUrl : function() {
+      return nextUrl;
+    },
+
+
+    /**
+     * @returns {Promise}
+     */
+    load : function() {
+      if (!finished) {
+        service.emit('load:start');
+
+        return loader
+          .load(nextUrl)
+          .then(afterLoad);
+      }
+      else {
+        var deferred = new $.Deferred();
+        deferred.resolve();
+        return deferred.promise();
+      }
+    },
+
+
+    /**
+     * Start infinite scroll process.
+     */
+    start : function() {
+      if (!finished) {
+        position.watch();
+      }
+    },
+
+
+    /**
+     * Stop infinite scroll process.
+     */
+    stop : function() {
+      position.stopWatching();
+    }
+
+  };
+
+
+  // Extend `service` with event emitter
+  Emitter([
+    'load:ready',
+    'load:start',
+    'load:end',
+    'finished'], service);
+
+
+  return service;
+
+}
