@@ -102,7 +102,7 @@ gulp.task('uglify', function(){
 
 
 gulp.task('umd', function(){
-  var umdHelper = function(){ return 'InfiniteScroll'; };
+  var umdHelper = function(){ return 'infiniteScroll'; };
 
   return gulp.src('./src/*.js')
     .pipe(concat('infinite-scroll.js'))

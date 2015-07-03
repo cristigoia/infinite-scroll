@@ -1,11 +1,11 @@
-/* infinite-scroll v0.5.0 - 2015-07-03T03:46:43.924Z - https://github.com/r-park/infinite-scroll */
+/* infinite-scroll v0.5.1 - 2015-07-03T04:35:49.807Z - https://github.com/r-park/infinite-scroll */
 ;(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([], factory);
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    root.InfiniteScroll = factory();
+    root.infiniteScroll = factory();
   }
 }(this, function() {
 'use strict';
@@ -304,5 +304,5 @@ function positionService(threshold, callback) {
 
 }
 
-return InfiniteScroll;
+return infiniteScroll;
 }));
