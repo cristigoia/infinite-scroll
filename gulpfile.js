@@ -8,19 +8,11 @@ var browserSync = require('browser-sync'),
     header      = require('gulp-header'),
     karma       = require('karma').server,
     rename      = require('gulp-rename'),
-    sass        = require('gulp-sass'),
     sourcemaps  = require('gulp-sourcemaps'),
     uglify      = require('gulp-uglify'),
     umd         = require('gulp-umd');
 
 var manifests = ['./bower.json', './package.json'];
-
-
-gulp.task('bump:patch', function(){
-  return gulp.src(manifests)
-    .pipe(bump({type: 'patch'}))
-    .pipe(gulp.dest('./'));
-});
 
 
 gulp.task('bump:minor', function(){
@@ -30,20 +22,15 @@ gulp.task('bump:minor', function(){
 });
 
 
+gulp.task('bump:patch', function(){
+  return gulp.src(manifests)
+    .pipe(bump({type: 'patch'}))
+    .pipe(gulp.dest('./'));
+});
+
+
 gulp.task('clean:dist', function(done){
   del('./dist/*', done);
-});
-
-
-gulp.task('clean:target', function(done){
-  del('./target/*', done);
-});
-
-
-gulp.task('concat', function concatenate(){
-  return gulp.src('./src/*.js')
-    .pipe(concat('infinite-scroll.js'))
-    .pipe(gulp.dest('./target'));
 });
 
 
@@ -80,18 +67,6 @@ gulp.task('lint', function(){
     .pipe(eslint({useEslintrc: true}))
     .pipe(eslint.format())
     .pipe(eslint.failAfterError());
-});
-
-
-gulp.task('sass', function compileSass(){
-  return gulp.src('./examples/*.scss')
-    .pipe(sass({
-      errLogToConsole: true,
-      outputStyle: 'nested',
-      precision: 10,
-      sourceComments: false
-    }))
-    .pipe(gulp.dest('./examples'));
 });
 
 
@@ -137,12 +112,6 @@ gulp.task('umd', function(){
 
 
 gulp.task('build', gulp.series('test', 'clean:dist', 'umd', 'uglify', 'headers', 'copy'));
-
-
-gulp.task('default', gulp.series('clean:target', 'concat', 'sass', function watch(){
-  gulp.watch('./examples/**/*.scss', gulp.task('sass'));
-  gulp.watch('./src/**/*.js', gulp.task('concat'));
-}));
 
 
 gulp.task('dist:patch', gulp.series('bump:patch', 'build'));
