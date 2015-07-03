@@ -1,4 +1,4 @@
-/* infinite-scroll v0.4.1 - 2015-06-28T01:41:34.521Z - https://github.com/r-park/infinite-scroll */
+/* infinite-scroll v0.5.0 - 2015-07-03T03:46:43.924Z - https://github.com/r-park/infinite-scroll */
 ;(function(root, factory) {
   if (typeof define === 'function' && define.amd) {
     define([], factory);
@@ -12,210 +12,297 @@
 
 
 /**
- * @name InfiniteScroll
- * @constructor
+ * @name infiniteScroll
  *
- * @param {{}}      options
- * @param {boolean} [options.autoLoad=true]
- * @param {string}  options.item
- * @param {string}  options.next
- * @param {number}  [options.activeZone=200]
- * @param {boolean} [options.waitForImages=false]
+ * @param {{}}      config
+ * @param {boolean} [config.autoLoad]
+ * @param {string}  config.itemSelector
+ * @param {string}  config.nextSelector
+ * @param {number}  config.threshold
+ * @param {boolean} [config.waitForImages]
+ *
+ * @returns {{
+ *   load: Function,
+ *   start: Function,
+ *   stop: Function
+ * }}
  *
  */
-function InfiniteScroll(options) {
-  eventEmitter(['load:ready', 'load:start', 'load:end'], this);
+function infiniteScroll(config) {
 
-  this.autoLoad = options.autoLoad !== false;
+  /**
+   * @type {number}
+   */
+  var currentPage = 1;
 
-  this.currentPage = 0;
 
-  this.finished = false;
+  /**
+   * @type {string|undefined}
+   */
+  var nextUrl = $(config.nextSelector).attr('href');
 
-  this.itemSelector = options.item;
-  this.nextSelector = options.next;
 
-  this.requestConfig = {
-    context: this,
-    dataType: 'html'
+  /**
+   * @type {boolean}
+   */
+  var finished = !nextUrl;
+
+
+  /**
+   * @type {{load: function(url:string)}}
+   */
+  var loader = loaderService(
+    parserService(config.itemSelector, config.nextSelector),
+    config.waitForImages
+  );
+
+
+  /**
+   * @type {{
+   *   onScroll: Function,
+   *   valid: Function,
+   *   stopWatching: Function,
+   *   watch: Function,
+   *   watching: Function
+   * }}
+   */
+  var position = positionService(config.threshold, function(){
+    if (config.autoLoad !== false) {
+      service.load();
+    }
+    else {
+      service.emit('load:ready');
+    }
+  });
+
+
+  /**
+   * @param {{items:jQuery, nextUrl:string}} data
+   */
+  var afterLoad = function(data) {
+    if (!data.nextUrl) {
+      finished = true;
+      service.emit('finished');
+    }
+    else {
+      currentPage++;
+      nextUrl = data.nextUrl;
+    }
+
+    service.emit('load:end', {items: data.items, page: currentPage}, function(){
+      service.start();
+    });
   };
 
-  this.updatePagination($(this.nextSelector));
 
-  this.waitForImages = !!options.waitForImages;
 
-  this.listener = new Listener({
-    activeZone: options.activeZone || 200,
-    callback: function(){
-      if (this.autoLoad) {
-        this.load();
+  var service = {
+
+    /**
+     * @returns {boolean}
+     */
+    finished : function() {
+      return finished;
+    },
+
+
+    /**
+     * @returns {string|undefined}
+     */
+    nextUrl : function() {
+      return nextUrl;
+    },
+
+
+    /**
+     * @returns {Promise}
+     */
+    load : function() {
+      if (!finished) {
+        service.emit('load:start');
+
+        return loader
+          .load(nextUrl)
+          .then(afterLoad);
       }
       else {
-        this.emit('load:ready');
+        var deferred = new $.Deferred();
+        deferred.resolve();
+        return deferred.promise();
       }
-    }.bind(this)
-  });
+    },
+
+
+    /**
+     * Start infinite scroll process.
+     */
+    start : function() {
+      if (!finished) {
+        position.watch();
+      }
+    },
+
+
+    /**
+     * Stop infinite scroll process.
+     */
+    stop : function() {
+      position.stopWatching();
+    }
+
+  };
+
+
+  // Extend `service` with event emitter
+  Emitter([
+    'load:ready',
+    'load:start',
+    'load:end',
+    'finished'], service);
+
+
+  return service;
+
 }
-
-
-InfiniteScroll.prototype = {
-
-  /**
-   * Load the next available page.
-   */
-  load : function() {
-    if (this.finished) return;
-
-    this.emit('load:start');
-
-    return $.ajax(this.requestConfig)
-      .then(function(data){
-        var $data = $('<div>' + data + '</div>'),
-            $items = $data.find(this.itemSelector),
-            $pagination = $data.find(this.nextSelector);
-
-        $data = null;
-
-        this.updatePagination($pagination);
-
-        if (this.waitForImages) {
-          $items.imagesReady()
-            .then(this.postLoad.bind(this));
-        }
-        else {
-          this.postLoad($items);
-        }
-      });
-  },
-
-
-  /**
-   * @param {jQuery} items
-   */
-  postLoad : function(items) {
-    var data = {items: items, page: this.currentPage},
-        that = this;
-
-    this.emit('load:end', data, function(){
-      that.start();
-    });
-  },
-
-
-  /**
-   * Start infinite-scroll.
-   */
-  start : function() {
-    if (!this.finished) {
-      this.listener.start();
-    }
-  },
-
-
-  /**
-   * Stop infinite-scroll.
-   */
-  stop : function() {
-    this.listener.stop();
-  },
-
-
-  /**
-   * @param {jQuery} pagination
-   */
-  updatePagination : function(pagination) {
-    this.currentPage++;
-
-    if (pagination.length) {
-      this.requestConfig.url = pagination.attr('href');
-    }
-    else {
-      this.finished = true;
-    }
-  }
-
-};
 
 /**
- * @name Listener
- * @constructor
+ * @name loader
  *
- * @param {{}}       options
- * @param {number}   [options.activeZone=200]
- * @param {function} options.callback
+ * @param {function(data:string)} parse
+ * @param {boolean} waitForImages
  *
- * TODO: extend Listener with eventEmitter
+ * @returns {{load: Function}}
  *
  */
-function Listener(options) {
+function loaderService(parse, waitForImages) {
+  return {
 
-  var timeoutId = null;
+    /**
+     * @param {string} url
+     * @returns {Promise}
+     */
+    load : function(url) {
+      return $.ajax({url: url}).then(function(data){
+        var parsedData = parse(data);
 
-
-  this.activeZone = options.activeZone || 200;
-  this.callback = options.callback;
-  this.listening = false;
-
-
-  /**
-   * Scroll event handler/throttler.
-   * @type {function(this:Listener)}
-   */
-  this.onScroll = function() {
-    if (timeoutId) clearTimeout(timeoutId);
-    timeoutId = setTimeout(this.resolve, 100);
-  }.bind(this);
-
-
-  /**
-   * @type {function(this:Listener)}
-   */
-  this.resolve = function() {
-    if (this.validate()) {
-      this.stop();
-      this.callback();
+        if (waitForImages) {
+          return parsedData.items.imagesReady().then(function(){
+            return parsedData;
+          });
+        }
+        else {
+          return parsedData;
+        }
+      });
     }
-  }.bind(this);
 
+  };
 }
 
+/**
+ * @name parser
+ *
+ * @param {string} itemSelector
+ * @param {string} nextSelector
+ *
+ * @returns {function(data:string)}
+ *
+ */
+function parserService(itemSelector, nextSelector) {
+  return function(data) {
+    data = $('<div>' + data + '</div>');
 
-Listener.prototype = {
+    return {
+      items: data.find(itemSelector),
+      nextUrl: data.find(nextSelector).attr('href')
+    };
+  };
+}
 
-  /**
-   * Start listening to scroll event.
-   */
-  start : function() {
-    if (this.listening) return;
+/**
+ * @name position
+ *
+ * @param {number} threshold
+ * @param {Function} callback
+ *
+ * @returns {{
+ *   onScroll: Function,
+ *   valid: Function,
+ *   stopWatching: Function,
+ *   watch: Function,
+ *   watching: Function
+ * }}
+ *
+ */
+function positionService(threshold, callback) {
 
-    if (this.validate()) {
-      this.callback();
+  // @type boolean
+  var watching = false;
+
+
+  var service = {
+
+    /**
+     * Listener function to be bound to `scroll` event.
+     */
+    onScroll : function() {
+      if (service.valid()) {
+        service.stopWatching();
+        callback();
+      }
+    },
+
+
+    /**
+     * Calculates scroll position, returning `true` if
+     * position has crossed `threshold`.
+     * @returns {boolean}
+     */
+    valid : function() {
+      return window.innerHeight + window.pageYOffset >= document.body.scrollHeight - threshold;
+    },
+
+
+    /**
+     * Stop watching scroll position.
+     */
+    stopWatching : function() {
+      if (watching) {
+        watching = false;
+        window.removeEventListener('scroll', service.onScroll);
+      }
+    },
+
+
+    /**
+     * Start watching scroll position.
+     */
+    watch : function() {
+      if (!watching) {
+        if (service.valid()) {
+          callback();
+        }
+        else {
+          watching = true;
+          window.addEventListener('scroll', service.onScroll);
+        }
+      }
+    },
+
+
+    /**
+     * @returns {boolean}
+     */
+    watching : function() {
+      return watching;
     }
-    else {
-      this.listening = true;
-      window.addEventListener('scroll', this.onScroll);
-    }
-  },
+
+  };
 
 
-  /**
-   * Stop listening to scroll event.
-   */
-  stop : function() {
-    if (!this.listening) return;
-    window.removeEventListener('scroll', this.onScroll);
-    this.listening = false;
-  },
+  return service;
 
-
-  /**
-   * @returns {boolean}
-   */
-  validate : function() {
-    return window.innerHeight + window.pageYOffset >= document.body.scrollHeight - this.activeZone;
-  }
-
-};
+}
 
 return InfiniteScroll;
 }));
