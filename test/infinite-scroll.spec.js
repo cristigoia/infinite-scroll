@@ -193,10 +193,35 @@ describe("InfiniteScroll", function(){
       infinite
         .on('load:end', listener)
         .load()
-          .then(function(){
-            expect(listener.callCount).toBe(1);
-            done();
-          });
+        .then(function(){
+          expect(listener.callCount).toBe(1);
+          done();
+        });
+    });
+
+    it("should emit 'load:end' with parsed response data", function(done){
+      var listener = function(data, resume){
+        expect(data).toBeDefined();
+        expect(data.items).toBeDefined();
+        expect(data.page).toBeDefined();
+        done();
+      };
+
+      infinite.on('load:end', listener).load();
+    });
+
+    it("should emit 'load:end' with a `resume` callback", function(done){
+      sinon.stub(infinite, 'start');
+
+      var listener = function(data, resume){
+        expect(typeof resume).toBe('function');
+        expect(infinite.start.callCount).toBe(0);
+        resume();
+        expect(infinite.start.callCount).toBe(1);
+        done();
+      };
+
+      infinite.on('load:end', listener).load();
     });
 
 
@@ -205,7 +230,7 @@ describe("InfiniteScroll", function(){
         infinite.load().then(function(){
           expect(infinite.nextUrl()).toBe('/base/test/fixtures/page-3.html');
           done();
-        })
+        });
       });
     });
 
